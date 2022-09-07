@@ -9,10 +9,10 @@ import (
 )
 
 // NewGenerator は新しいGeneratorを返します
-func NewGenerator() (*Generator, error) {
+func NewGenerator() *Generator {
 	pdf := &gopdf.GoPdf{}
 	pdf.Start(gopdf.Config{PageSize: *gopdf.PageSizeA4})
-	return &Generator{pdf: pdf}, nil
+	return &Generator{pdf: pdf}
 }
 
 type Generator struct {
