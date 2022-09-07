@@ -40,7 +40,7 @@ func parseVarsInternal(v reflect.Value, cb parseCallback, x float64, y float64) 
 			cb(text, tag.move(x, y))
 
 		case reflect.Array, reflect.Slice:
-			rx, ry, err := parseRelTag(f.Tag.Get("pdftpl"))
+			rx, ry, err := parseRelTag(tagStr)
 			if err != nil {
 				return err
 			}
@@ -54,7 +54,7 @@ func parseVarsInternal(v reflect.Value, cb parseCallback, x float64, y float64) 
 			}
 
 		case reflect.Struct:
-			rx, ry, err := parseRelTag(f.Tag.Get("pdftpl"))
+			rx, ry, err := parseRelTag(tagStr)
 			if err != nil {
 				return err
 			}
