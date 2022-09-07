@@ -13,7 +13,7 @@ import (
 
 type tag struct {
 	x, y, w  float64
-	fontSize int
+	fontSize float64
 	fontFace string
 	align    int
 }
@@ -40,7 +40,7 @@ func parseTag(tagStr string) (*tag, error) {
 	if _, err := fmt.Sscanf(vars.Get("w"), "%f", &t.w); err != nil {
 		return nil, fmt.Errorf("wパラメータが不正です: %v", tagStr)
 	}
-	if _, err := fmt.Sscanf(vars.Get("s"), "%d", &t.fontSize); err != nil {
+	if _, err := fmt.Sscanf(vars.Get("s"), "%f", &t.fontSize); err != nil {
 		return nil, fmt.Errorf("sパラメータが不正です: %v", tagStr)
 	}
 	if vars.Has("f") {

@@ -60,10 +60,7 @@ func (gen *Generator) addPage(tpl *Template, vars interface{}, debug bool) error
 		gen.pdf.SetFont(t.fontFace, "", t.fontSize)
 		gen.pdf.SetX(t.x)
 		gen.pdf.SetY(t.y)
-		gen.pdf.MultiCellWithOption(&gopdf.Rect{W: t.w, H: 1000}, text, gopdf.CellOption{
-			Align: t.align,
-			// Align: gopdf.Right | gopdf.Center,
-		})
+		gen.pdf.MultiCellWithOption(&gopdf.Rect{W: t.w, H: gopdf.PageSizeA4.H}, text, gopdf.CellOption{Align: t.align})
 	}
 
 	if err := parseVars(vars, cb); err != nil {
