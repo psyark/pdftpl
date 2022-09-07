@@ -74,25 +74,24 @@ func (tpl *Template) addPage(vars interface{}, debug bool) error {
 	tpl.pdf.AddPage()
 	tpl.pdf.UseImportedTemplate(tpl.id, 0, 0, gopdf.PageSizeA4.W, gopdf.PageSizeA4.H)
 
-	// デバッグ用の枠
-	border := 0
-	if debug {
-		border = gopdf.Left | gopdf.Right | gopdf.Bottom | gopdf.Top
-		tpl.pdf.SetStrokeColor(255, 128, 128)
-	}
-
 	cb := func(text string, t tag) {
+		if debug {
+			tpl.pdf.SetStrokeColor(255, 128, 128)
+			tpl.pdf.SetLineWidth(2)
+			tpl.pdf.Rectangle(t.x, t.y, t.x+t.w, t.y+10, "D", 3, 10)
+		}
+
 		tpl.pdf.SetFont(fontIPAexGothic, "", t.fontSize)
 		tpl.pdf.SetX(t.x)
 		tpl.pdf.SetY(t.y)
-		tpl.pdf.CellWithOption(&gopdf.Rect{W: t.w, H: t.h}, text, gopdf.CellOption{
-			Align:  t.align,
-			Border: border,
+		tpl.pdf.MultiCellWithOption(&gopdf.Rect{W: t.w, H: 1000}, text, gopdf.CellOption{
+			Align: t.align,
+			// Align: gopdf.Right | gopdf.Center,
 		})
 	}
 
 	if err := parseVars(vars, cb); err != nil {
-		return err
+		return errors.Wrap(err, "parseVars")
 	}
 	return nil
 }

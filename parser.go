@@ -3,6 +3,8 @@ package pdftpl
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/pkg/errors"
 )
 
 // pdftplタグ付きフィールドに対するコールバック
@@ -31,7 +33,7 @@ func parseVarsInternal(v reflect.Value, cb parseCallback, x float64, y float64) 
 		case reflect.String:
 			tag, err := parseTag(tagStr)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "parseTag")
 			}
 
 			text := v.Field(i).String()
