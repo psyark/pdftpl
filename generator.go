@@ -50,17 +50,17 @@ func (gen *Generator) addPage(tpl *Template, vars interface{}, debug bool) error
 	gen.pdf.AddPage()
 	gen.pdf.UseImportedTemplate(tpl.id, 0, 0, gopdf.PageSizeA4.W, gopdf.PageSizeA4.H)
 
-	cb := func(text string, t tag) {
+	cb := func(text string, t textTag) {
 		if debug {
 			gen.pdf.SetStrokeColor(255, 128, 128)
 			gen.pdf.SetLineWidth(2)
-			gen.pdf.Rectangle(t.x, t.y, t.x+t.w, t.y+10, "D", 3, 10)
+			gen.pdf.Rectangle(t.X, t.Y, t.X+t.W, t.Y+10, "D", 3, 10)
 		}
 
-		gen.pdf.SetFont(t.fontFace, "", t.fontSize)
-		gen.pdf.SetX(t.x)
-		gen.pdf.SetY(t.y)
-		gen.pdf.MultiCellWithOption(&gopdf.Rect{W: t.w, H: gopdf.PageSizeA4.H}, text, gopdf.CellOption{Align: t.align})
+		gen.pdf.SetFont(t.FontFace, "", t.FontSize)
+		gen.pdf.SetX(t.X)
+		gen.pdf.SetY(t.Y)
+		gen.pdf.MultiCellWithOption(&gopdf.Rect{W: t.W, H: gopdf.PageSizeA4.H}, text, gopdf.CellOption{Align: t.Align})
 	}
 
 	if err := parseVars(vars, cb); err != nil {
