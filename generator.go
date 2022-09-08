@@ -36,19 +36,21 @@ func (gen *Generator) RegisterTemplate(src io.ReadSeeker, pageNumber int) (tmpl 
 }
 
 // AddPage はページを追加します
-func (gen *Generator) AddPage(tpl *Template, vars interface{}) error {
-	return gen.addPage(tpl, vars, false)
+func (gen *Generator) AddPage(vars interface{}, tpl *Template) error {
+	return gen.addPage(vars, tpl, false)
 }
 
 // AddPageDebug はデバッグ情報付きでページを追加します
-func (gen *Generator) AddPageDebug(tpl *Template, vars interface{}) error {
-	return gen.addPage(tpl, vars, true)
+func (gen *Generator) AddPageDebug(vars interface{}, tpl *Template) error {
+	return gen.addPage(vars, tpl, true)
 }
 
-func (gen *Generator) addPage(tpl *Template, vars interface{}, debug bool) error {
+func (gen *Generator) addPage(vars interface{}, tpl *Template, debug bool) error {
 	// ページ追加
 	gen.pdf.AddPage()
-	gen.pdf.UseImportedTemplate(tpl.id, 0, 0, gopdf.PageSizeA4.W, gopdf.PageSizeA4.H)
+	if tpl != nil {
+		gen.pdf.UseImportedTemplate(tpl.id, 0, 0, gopdf.PageSizeA4.W, gopdf.PageSizeA4.H)
+	}
 
 	texts, err := parseVars(vars)
 	if err != nil {
@@ -65,7 +67,16 @@ func (gen *Generator) addPage(tpl *Template, vars interface{}, debug bool) error
 		gen.pdf.SetFont(t.FontFace, "", t.FontSize)
 		gen.pdf.SetX(t.X)
 		gen.pdf.SetY(t.Y)
-		gen.pdf.MultiCellWithOption(&gopdf.Rect{W: t.W, H: gopdf.PageSizeA4.H}, t.Text, gopdf.CellOption{Align: t.Align})
+
+		if t.Text != "" {
+			texts, err := gen.pdf.SplitTextWithWordWrap(t.Text, t.W)
+			if err != nil {
+				return err
+			}
+			for _, text := range texts {
+				gen.pdf.MultiCellWithOption(&gopdf.Rect{W: t.W, H: gopdf.PageSizeA4.H}, text, gopdf.CellOption{Align: t.Align})
+			}
+		}
 	}
 
 	return nil
