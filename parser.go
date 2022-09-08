@@ -12,7 +12,7 @@ type taggedText struct {
 	Text string
 }
 
-type target struct {
+type stackEntry struct {
 	value   reflect.Value
 	originX float64
 	originY float64
@@ -22,13 +22,13 @@ type target struct {
 func parseVars(vars interface{}) ([]taggedText, error) {
 	texts := []taggedText{}
 
-	targets := []target{{value: reflect.ValueOf(vars)}}
-	for len(targets) != 0 {
-		tgt := targets[0]
-		targets = targets[1:]
+	stack := []stackEntry{{value: reflect.ValueOf(vars)}}
+	for len(stack) != 0 {
+		entry := stack[0]
+		stack = stack[1:]
 
-		v := tgt.value
-		t := tgt.value.Type()
+		v := entry.value
+		t := entry.value.Type()
 		if t.Kind() != reflect.Struct {
 			return nil, fmt.Errorf("vars は構造体である必要があります")
 		}
@@ -47,7 +47,7 @@ func parseVars(vars interface{}) ([]taggedText, error) {
 					return nil, errors.Wrap(err, "parseTag")
 				}
 
-				tt := taggedText{textTag: tag.fromOrigin(tgt.originX, tgt.originY), Text: v.Field(i).String()}
+				tt := taggedText{textTag: tag.fromOrigin(entry.originX, entry.originY), Text: v.Field(i).String()}
 				texts = append(texts, tt)
 			case reflect.Array, reflect.Slice:
 				tag := &transTag{}
@@ -57,8 +57,7 @@ func parseVars(vars interface{}) ([]taggedText, error) {
 
 				for j := 0; j < v.Field(i).Len(); j++ {
 					fj := float64(j)
-					// 座標を変えつつ再帰呼び出し
-					targets = append(targets, target{v.Field(i).Index(j), tgt.originX + tag.Dx*fj, tgt.originY + tag.Dy*fj})
+					stack = append(stack, stackEntry{v.Field(i).Index(j), entry.originX + tag.Dx*fj, entry.originY + tag.Dy*fj})
 				}
 
 			case reflect.Struct:
@@ -67,8 +66,7 @@ func parseVars(vars interface{}) ([]taggedText, error) {
 					return nil, errors.Wrap(err, "parseTag")
 				}
 
-				// 座標を変えつつ再帰呼び出し
-				targets = append(targets, target{v.Field(i), tgt.originX + tag.Dx, tgt.originY + tag.Dy})
+				stack = append(stack, stackEntry{v.Field(i), entry.originX + tag.Dx, entry.originY + tag.Dy})
 			default:
 				return nil, fmt.Errorf("vars の %vフィールドが未対応の型 (%v)です", f.Name, f.Type)
 			}
