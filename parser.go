@@ -18,7 +18,7 @@ type target struct {
 	originY float64
 }
 
-// パラメータ構造体をパースしてpdftplタグ付きフィールドに対してコールバックを呼び出します
+// パラメータ構造体をパースしてtaggedTextのスライスを返します
 func parseVars(vars interface{}) ([]taggedText, error) {
 	texts := []taggedText{}
 
