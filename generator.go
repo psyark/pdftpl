@@ -82,13 +82,9 @@ func (gen *Generator) addPage(vars interface{}, tpl *Template, debug bool) error
 	return nil
 }
 
-// Generate はPDFを出力します
-func (gen *Generator) Generate(writer io.Writer) error {
-	if err := gen.pdf.Write(writer); err != nil {
-		gen.pdf.Close()
-		return err
-	}
-	return gen.pdf.Close()
+// Generate はPDFのバイト列を返却します
+func (gen *Generator) Generate() ([]byte, error) {
+	return gen.pdf.GetBytesPdfReturnErr()
 }
 
 // Template はGeneratorに登録されたテンプレートです
