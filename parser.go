@@ -3,8 +3,6 @@ package pdftpl
 import (
 	"fmt"
 	"reflect"
-
-	"github.com/pkg/errors"
 )
 
 type taggedText struct {
@@ -44,7 +42,7 @@ func parseVars(vars interface{}) ([]taggedText, error) {
 			case reflect.String:
 				tag := &textTag{}
 				if err := tag.parse(tagStr); err != nil {
-					return nil, errors.Wrap(err, "parseTag")
+					return nil, fmt.Errorf("parseTag: %v, %w", tagStr, err)
 				}
 
 				tt := taggedText{textTag: tag.fromOrigin(entry.originX, entry.originY), Text: v.Field(i).String()}
@@ -52,7 +50,7 @@ func parseVars(vars interface{}) ([]taggedText, error) {
 			case reflect.Array, reflect.Slice:
 				tag := &transTag{}
 				if err := tag.parse(tagStr); err != nil {
-					return nil, errors.Wrap(err, "parseTag")
+					return nil, fmt.Errorf("parseTag: %v, %w", tagStr, err)
 				}
 
 				for j := 0; j < v.Field(i).Len(); j++ {
@@ -63,7 +61,7 @@ func parseVars(vars interface{}) ([]taggedText, error) {
 			case reflect.Struct:
 				tag := &transTag{}
 				if err := tag.parse(tagStr); err != nil {
-					return nil, errors.Wrap(err, "parseTag")
+					return nil, fmt.Errorf("parseTag: %v, %w", tagStr, err)
 				}
 
 				stack = append(stack, stackEntry{v.Field(i), entry.originX + tag.Dx, entry.originY + tag.Dy})
