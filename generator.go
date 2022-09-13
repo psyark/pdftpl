@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/pkg/errors"
 	"github.com/signintech/gopdf"
 )
 
@@ -54,7 +53,7 @@ func (gen *Generator) addPage(vars interface{}, tpl *Template, debug bool) error
 
 	texts, err := parseVars(vars)
 	if err != nil {
-		return errors.Wrap(err, "parseVars")
+		return fmt.Errorf("parseVars: %w", err)
 	}
 
 	for _, t := range texts {

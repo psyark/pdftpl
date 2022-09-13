@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/gorilla/schema"
-	"github.com/pkg/errors"
 	"github.com/signintech/gopdf"
 )
 
@@ -30,7 +29,7 @@ func (t textTag) fromOrigin(x float64, y float64) textTag {
 func (t *textTag) parse(tagStr string) error {
 	vars, err := url.ParseQuery(strings.ReplaceAll(tagStr, ",", "&"))
 	if err != nil {
-		return errors.Wrap(err, "url.ParseQuery")
+		return fmt.Errorf("url.ParseQuery: %w", err)
 	}
 
 	if err := schema.NewDecoder().Decode(t, vars); err != nil {
@@ -59,7 +58,7 @@ type transTag struct {
 func (t *transTag) parse(tagStr string) error {
 	vars, err := url.ParseQuery(strings.ReplaceAll(tagStr, ",", "&"))
 	if err != nil {
-		return errors.Wrap(err, "url.ParseQuery")
+		return fmt.Errorf("url.ParseQuery: %w", err)
 	}
 
 	return schema.NewDecoder().Decode(t, vars)
