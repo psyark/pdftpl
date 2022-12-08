@@ -74,6 +74,10 @@ func (gen *Generator) addPage(vars interface{}, tpl *Template, debug bool) error
 			}
 			for _, text := range texts {
 				gen.pdf.MultiCellWithOption(&gopdf.Rect{W: t.W, H: gopdf.PageSizeA4.H}, text, gopdf.CellOption{Align: t.Align})
+
+				if t.LineHeight != 0 {
+					gen.pdf.SetY(gen.pdf.GetY() + t.FontSize*(t.LineHeight-1))
+				}
 			}
 		}
 	}

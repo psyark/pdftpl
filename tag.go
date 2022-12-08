@@ -16,6 +16,7 @@ type textTag struct {
 	W           float64 `schema:"w,required"`
 	FontSize    float64 `schema:"s,required"`
 	FontFace    string  `schema:"f"`
+	LineHeight  float64 `schema:"lh"`
 	AlignString string  `schema:"a"`
 	Align       int
 }
