@@ -51,6 +51,34 @@ func (t *textTag) parse(tagStr string) error {
 	return nil
 }
 
+// `pdftpl:"x=425,y=50,w=120,h=120,f=contain"`
+type imageTag struct {
+	X   float64 `schema:"x,required"`
+	Y   float64 `schema:"y,required"`
+	W   float64 `schema:"w,required"`
+	H   float64 `schema:"h,required"`
+	Fit string  `schema:"f,required"`
+}
+
+func (t imageTag) fromOrigin(x float64, y float64) imageTag {
+	t.X += x
+	t.Y += y
+	return t
+}
+
+func (t *imageTag) parse(tagStr string) error {
+	vars, err := url.ParseQuery(strings.ReplaceAll(tagStr, ",", "&"))
+	if err != nil {
+		return fmt.Errorf("url.ParseQuery: %w", err)
+	}
+
+	if err := schema.NewDecoder().Decode(t, vars); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 type transTag struct {
 	Dx float64 `schema:"dx"`
 	Dy float64 `schema:"dy"`

@@ -2,13 +2,9 @@ package pdftpl
 
 import (
 	"fmt"
+	"image"
 	"reflect"
 )
-
-type taggedText struct {
-	textTag
-	Text string
-}
 
 type stackEntry struct {
 	value   reflect.Value
@@ -16,9 +12,9 @@ type stackEntry struct {
 	originY float64
 }
 
-// パラメータ構造体をパースしてtaggedTextのスライスを返します
-func parseVars(vars interface{}) ([]taggedText, error) {
-	texts := []taggedText{}
+// パラメータ構造体をパースしてelementのスライスを返します
+func parseVars(vars interface{}) ([]element, error) {
+	elements := []element{}
 
 	stack := []stackEntry{{value: reflect.ValueOf(vars)}}
 	for len(stack) != 0 {
@@ -45,8 +41,8 @@ func parseVars(vars interface{}) ([]taggedText, error) {
 					return nil, fmt.Errorf("parseTag: %v, %w", tagStr, err)
 				}
 
-				tt := taggedText{textTag: tag.fromOrigin(entry.originX, entry.originY), Text: v.Field(i).String()}
-				texts = append(texts, tt)
+				element := &textElement{textTag: tag.fromOrigin(entry.originX, entry.originY), text: v.Field(i).String()}
+				elements = append(elements, element)
 			case reflect.Array, reflect.Slice:
 				tag := &transTag{}
 				if err := tag.parse(tagStr); err != nil {
@@ -65,12 +61,26 @@ func parseVars(vars interface{}) ([]taggedText, error) {
 				}
 
 				stack = append(stack, stackEntry{v.Field(i), entry.originX + tag.Dx, entry.originY + tag.Dy})
+
 			default:
-				return nil, fmt.Errorf("vars の %vフィールドが未対応の型 (%v)です", f.Name, f.Type)
+				if f.Type == reflect.TypeOf((*image.Image)(nil)).Elem() {
+					tag := &imageTag{}
+					if err := tag.parse(tagStr); err != nil {
+						return nil, fmt.Errorf("parseTag: %v, %w", tagStr, err)
+					}
+
+					element := &imageElement{imageTag: tag.fromOrigin(entry.originX, entry.originY)}
+					if img, ok := v.Field(i).Interface().(image.Image); ok {
+						element.image = img
+					}
+					elements = append(elements, element)
+				} else {
+					return nil, fmt.Errorf("vars の %vフィールドが未対応の型 (%v)です", f.Name, f.Type)
+				}
 			}
 		}
 
 	}
 
-	return texts, nil
+	return elements, nil
 }

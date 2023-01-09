@@ -51,34 +51,14 @@ func (gen *Generator) addPage(vars interface{}, tpl *Template, debug bool) error
 		gen.pdf.UseImportedTemplate(tpl.id, 0, 0, gopdf.PageSizeA4.W, gopdf.PageSizeA4.H)
 	}
 
-	texts, err := parseVars(vars)
+	elements, err := parseVars(vars)
 	if err != nil {
 		return fmt.Errorf("parseVars: %w", err)
 	}
 
-	for _, t := range texts {
-		if debug {
-			gen.pdf.SetStrokeColor(255, 128, 128)
-			gen.pdf.SetLineWidth(2)
-			gen.pdf.Rectangle(t.X, t.Y, t.X+t.W, t.Y+10, "D", 3, 10)
-		}
-
-		gen.pdf.SetFont(t.FontFace, "", t.FontSize)
-		gen.pdf.SetX(t.X)
-		gen.pdf.SetY(t.Y)
-
-		if t.Text != "" {
-			texts, err := gen.pdf.SplitTextWithWordWrap(t.Text, t.W)
-			if err != nil {
-				return err
-			}
-			for _, text := range texts {
-				gen.pdf.MultiCellWithOption(&gopdf.Rect{W: t.W, H: gopdf.PageSizeA4.H}, text, gopdf.CellOption{Align: t.Align})
-
-				if t.LineHeight != 0 {
-					gen.pdf.SetY(gen.pdf.GetY() + t.FontSize*(t.LineHeight-1))
-				}
-			}
+	for _, element := range elements {
+		if err := element.draw(gen.pdf, debug); err != nil {
+			return err
 		}
 	}
 
