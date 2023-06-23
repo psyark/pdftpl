@@ -41,16 +41,16 @@ func (gen *Generator) RegisterPageTemplate(pageSize *gopdf.Rect, pdfBytes []byte
 }
 
 // AddPageWithTemplate はページテンプレートを指定してページを追加します
-func (gen *Generator) AddPageWithTemplate(vars any, tpl *PageTemplate, options ...AddPageOption) error {
-	return gen.addPage(vars, tpl.pageSize, tpl, options...)
+func (gen *Generator) AddPageWithTemplate(styledVars any, tpl *PageTemplate, options ...AddPageOption) error {
+	return gen.addPage(styledVars, tpl.pageSize, tpl, options...)
 }
 
 // AddPage はページサイズを指定してページを追加します
-func (gen *Generator) AddPage(vars any, pageSize *gopdf.Rect, options ...AddPageOption) error {
-	return gen.addPage(vars, pageSize, nil, options...)
+func (gen *Generator) AddPage(styledVars any, pageSize *gopdf.Rect, options ...AddPageOption) error {
+	return gen.addPage(styledVars, pageSize, nil, options...)
 }
 
-func (gen *Generator) addPage(vars any, pageSize *gopdf.Rect, tpl *PageTemplate, options ...AddPageOption) error {
+func (gen *Generator) addPage(styledVars any, pageSize *gopdf.Rect, tpl *PageTemplate, options ...AddPageOption) error {
 	opts := &addPageOptions{
 		DebugBorderColor: color.Transparent,
 	}
@@ -64,9 +64,9 @@ func (gen *Generator) addPage(vars any, pageSize *gopdf.Rect, tpl *PageTemplate,
 		gen.gopdf.UseImportedTemplate(tpl.templateID, 0, 0, pageSize.W, pageSize.H)
 	}
 
-	elements, err := parseVars(vars)
+	elements, err := getElementsFromStyledVars(styledVars)
 	if err != nil {
-		return fmt.Errorf("parseVars: %w", err)
+		return fmt.Errorf("getElementsFromStyledVars: %w", err)
 	}
 
 	for _, element := range elements {

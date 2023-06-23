@@ -13,10 +13,10 @@ type stackEntry struct {
 }
 
 // パラメータ構造体をパースしてelementのスライスを返します
-func parseVars(vars interface{}) ([]element, error) {
+func getElementsFromStyledVars(styledVars any) ([]element, error) {
 	elements := []element{}
 
-	stack := []stackEntry{{value: reflect.ValueOf(vars)}}
+	stack := []stackEntry{{value: reflect.ValueOf(styledVars)}}
 	for len(stack) != 0 {
 		entry := stack[0]
 		stack = stack[1:]
@@ -24,7 +24,7 @@ func parseVars(vars interface{}) ([]element, error) {
 		v := entry.value
 		t := entry.value.Type()
 		if t.Kind() != reflect.Struct {
-			return nil, fmt.Errorf("vars は構造体である必要があります")
+			return nil, fmt.Errorf("styledVars must be Struct")
 		}
 
 		for i := 0; i < t.NumField(); i++ {

@@ -75,7 +75,7 @@ type PDFVars struct {
 	Image      image.Image         `pdftpl:"x=50,y=50,w=120,h=120,f=contain"`
 	Date       string              `pdftpl:"x=425,y=50,w=120,s=12,a=r"`
 	Title      string              `pdftpl:"x=50,y=100,w=495,s=26,a=c,f=ipaexm"`
-	Recipient  string              `pdftpl:"x=50,y=190,w=300,s=18,a=l"`
+	Recipient  string              `pdftpl:"x=50,y=190,w=300,s=18,a=l,lh=1.2"`
 	Amount     string              `pdftpl:"x=132,y=252,w=95,s=12,a=r"`
 	Room       string              `pdftpl:"x=132,y=300,w=145,s=10,a=c"`
 	Period     string              `pdftpl:"x=132,y=316,w=145,s=10,a=c"`
