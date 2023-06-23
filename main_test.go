@@ -23,7 +23,7 @@ var (
 )
 
 func TestNewGenerator(t *testing.T) {
-	gen := pdftpl.NewGenerator(gopdf.PageSizeA4)
+	gen := pdftpl.NewGenerator()
 
 	if err := gen.RegisterFont("", ipaexgBytes); err != nil {
 		t.Fatal(err)
@@ -32,7 +32,7 @@ func TestNewGenerator(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tpl, err := gen.RegisterTemplate(templateBytes, 1)
+	tpl, err := gen.RegisterPageTemplate(gopdf.PageSizeA4, templateBytes, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,10 +53,10 @@ func TestNewGenerator(t *testing.T) {
 		}
 	}
 
-	if err := gen.AddPage(vars, tpl, pdftpl.Debug(color.RGBA{R: 0xFF, A: 0xFF})); err != nil {
+	if err := gen.AddPageWithTemplate(vars, tpl, pdftpl.Debug(color.RGBA{R: 0xFF, A: 0xFF})); err != nil {
 		t.Fatal(err)
 	}
-	if err := gen.AddPage(vars, nil, pdftpl.Debug(color.RGBA{B: 0xFF, A: 0xFF})); err != nil {
+	if err := gen.AddPage(vars, gopdf.PageSizeA4Landscape, pdftpl.Debug(color.RGBA{B: 0xFF, A: 0xFF})); err != nil {
 		t.Fatal(err)
 	}
 

@@ -10,37 +10,46 @@ import (
 )
 
 // NewGenerator は新しいGeneratorを返します
-func NewGenerator(pageSize *gopdf.Rect) *Generator {
+func NewGenerator() *Generator {
 	pdf := &gopdf.GoPdf{}
-	pdf.Start(gopdf.Config{PageSize: *pageSize})
-	return &Generator{gopdf: pdf, pageSize: pageSize}
+	pdf.Start(gopdf.Config{})
+	return &Generator{gopdf: pdf}
 }
 
 type Generator struct {
-	gopdf    *gopdf.GoPdf
-	pageSize *gopdf.Rect
+	gopdf *gopdf.GoPdf
 }
 
 func (gen *Generator) RegisterFont(name string, ttfData []byte) error {
 	return gen.gopdf.AddTTFFontData(name, ttfData)
 }
 
-// RegisterTemplate はテンプレートとなるPDFをページ単位で登録します
-func (gen *Generator) RegisterTemplate(data []byte, pageNumber int) (tmpl *Template, e error) {
+// RegisterPageTemplate はテンプレートとなるPDFをページ単位で登録します
+func (gen *Generator) RegisterPageTemplate(pageSize *gopdf.Rect, pdfBytes []byte, pageNumber int) (basePDF *PageTemplate, e error) {
 	defer func() {
 		if err := recover(); err != nil {
 			e = fmt.Errorf("panic: %v", err)
 		}
 	}()
 
-	var rs io.ReadSeeker = bytes.NewReader(data)
-	id := gen.gopdf.ImportPageStream(&rs, pageNumber, "/MediaBox")
-	tmpl = &Template{id}
+	var readSeeker io.ReadSeeker = bytes.NewReader(pdfBytes)
+	basePDF = &PageTemplate{
+		templateID: gen.gopdf.ImportPageStream(&readSeeker, pageNumber, "/MediaBox"),
+		pageSize:   pageSize,
+	}
 	return
 }
 
-// AddPage はページを追加します
-func (gen *Generator) AddPage(vars any, tpl *Template, options ...AddPageOption) error {
+// AddPageWithTemplate はページを追加します
+func (gen *Generator) AddPageWithTemplate(vars any, tpl *PageTemplate, options ...AddPageOption) error {
+	return gen.addPage(vars, tpl, nil, options...)
+}
+
+func (gen *Generator) AddPage(vars any, pageSize *gopdf.Rect, options ...AddPageOption) error {
+	return gen.addPage(vars, nil, pageSize, options...)
+}
+
+func (gen *Generator) addPage(vars any, tpl *PageTemplate, pageSize *gopdf.Rect, options ...AddPageOption) error {
 	opts := &addPageOptions{
 		DebugBorderColor: color.Transparent,
 	}
@@ -49,9 +58,13 @@ func (gen *Generator) AddPage(vars any, tpl *Template, options ...AddPageOption)
 	}
 
 	// ページ追加
-	gen.gopdf.AddPage()
 	if tpl != nil {
-		gen.gopdf.UseImportedTemplate(tpl.id, 0, 0, gen.pageSize.W, gen.pageSize.H)
+		gen.gopdf.AddPageWithOption(gopdf.PageOption{PageSize: tpl.pageSize})
+		gen.gopdf.UseImportedTemplate(tpl.templateID, 0, 0, tpl.pageSize.W, tpl.pageSize.H)
+	} else if pageSize != nil {
+		gen.gopdf.AddPageWithOption(gopdf.PageOption{PageSize: pageSize})
+	} else {
+		return fmt.Errorf("pageTemplate または pageSizeを指定する必要があります")
 	}
 
 	elements, err := parseVars(vars)
@@ -73,7 +86,8 @@ func (gen *Generator) Generate() ([]byte, error) {
 	return gen.gopdf.GetBytesPdfReturnErr()
 }
 
-// Template はGeneratorに登録されたテンプレートです
-type Template struct {
-	id int
+// PageTemplate は登録されたページテンプレートです
+type PageTemplate struct {
+	templateID int
+	pageSize   *gopdf.Rect
 }
