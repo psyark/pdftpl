@@ -58,8 +58,17 @@ type imageElement struct {
 }
 
 func (e *imageElement) draw(pdf *gopdf.GoPdf, options *addPageOptions) error {
+	if options.DebugBorderColor != color.Transparent {
+		r, g, b, _ := options.DebugBorderColor.RGBA()
+		pdf.SetStrokeColor(uint8(r>>8), uint8(g>>8), uint8(b>>8))
+		pdf.SetLineWidth(2)
+		if err := pdf.Rectangle(e.X-1, e.Y-1, e.X+e.W+2, e.Y+e.H+2, "D", 0, 0); err != nil {
+			return err
+		}
+	}
+
 	if e.image != nil {
-		pdf.ImageFrom(e.image, e.X, e.Y, &gopdf.Rect{W: e.W, H: e.H})
+		return pdf.ImageFrom(e.image, e.X, e.Y, &gopdf.Rect{W: e.W, H: e.H})
 	}
 	return nil
 }
