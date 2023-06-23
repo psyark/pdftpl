@@ -1,6 +1,7 @@
 package pdftpl
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 
@@ -8,28 +9,31 @@ import (
 )
 
 // NewGenerator は新しいGeneratorを返します
-func NewGenerator() *Generator {
+func NewGenerator(pageSize *gopdf.Rect) *Generator {
 	pdf := &gopdf.GoPdf{}
-	pdf.Start(gopdf.Config{PageSize: *gopdf.PageSizeA4})
-	return &Generator{pdf: pdf}
+	pdf.Start(gopdf.Config{PageSize: *pageSize})
+	return &Generator{gopdf: pdf, pageSize: pageSize}
 }
 
 type Generator struct {
-	pdf *gopdf.GoPdf
+	gopdf    *gopdf.GoPdf
+	pageSize *gopdf.Rect
 }
 
 func (gen *Generator) RegisterFont(name string, ttfData []byte) error {
-	return gen.pdf.AddTTFFontData(name, ttfData)
+	return gen.gopdf.AddTTFFontData(name, ttfData)
 }
 
 // RegisterTemplate はテンプレートとなるPDFをページ単位で登録します
-func (gen *Generator) RegisterTemplate(src io.ReadSeeker, pageNumber int) (tmpl *Template, e error) {
+func (gen *Generator) RegisterTemplate(data []byte, pageNumber int) (tmpl *Template, e error) {
 	defer func() {
 		if err := recover(); err != nil {
 			e = fmt.Errorf("panic: %v", err)
 		}
 	}()
-	id := gen.pdf.ImportPageStream(&src, pageNumber, "/MediaBox")
+
+	var rs io.ReadSeeker = bytes.NewReader(data)
+	id := gen.gopdf.ImportPageStream(&rs, pageNumber, "/MediaBox")
 	tmpl = &Template{id}
 	return
 }
@@ -46,9 +50,9 @@ func (gen *Generator) AddPageDebug(vars interface{}, tpl *Template) error {
 
 func (gen *Generator) addPage(vars interface{}, tpl *Template, debug bool) error {
 	// ページ追加
-	gen.pdf.AddPage()
+	gen.gopdf.AddPage()
 	if tpl != nil {
-		gen.pdf.UseImportedTemplate(tpl.id, 0, 0, gopdf.PageSizeA4.W, gopdf.PageSizeA4.H)
+		gen.gopdf.UseImportedTemplate(tpl.id, 0, 0, gen.pageSize.W, gen.pageSize.H)
 	}
 
 	elements, err := parseVars(vars)
@@ -57,7 +61,7 @@ func (gen *Generator) addPage(vars interface{}, tpl *Template, debug bool) error
 	}
 
 	for _, element := range elements {
-		if err := element.draw(gen.pdf, debug); err != nil {
+		if err := element.draw(gen.gopdf, debug); err != nil {
 			return err
 		}
 	}
@@ -67,7 +71,7 @@ func (gen *Generator) addPage(vars interface{}, tpl *Template, debug bool) error
 
 // Generate はPDFのバイト列を返却します
 func (gen *Generator) Generate() ([]byte, error) {
-	return gen.pdf.GetBytesPdfReturnErr()
+	return gen.gopdf.GetBytesPdfReturnErr()
 }
 
 // Template はGeneratorに登録されたテンプレートです

@@ -10,28 +10,31 @@ import (
 
 	"github.com/aquilax/go-perlin"
 	"github.com/psyark/pdftpl"
+	"github.com/signintech/gopdf"
 )
 
-//go:embed "testdata/fonts/ipaexg.ttf"
-var ipaexgttf []byte
+var (
+	//go:embed "testdata/fonts/ipaexm.ttf"
+	ipaexmBytes []byte
+	//go:embed "testdata/fonts/ipaexg.ttf"
+	ipaexgBytes []byte
+	//go:embed "testdata/pdf-templates/meter-clinic-building.pdf"
+	templateBytes []byte
+)
 
 func TestNewGenerator(t *testing.T) {
-	gen := pdftpl.NewGenerator()
+	gen := pdftpl.NewGenerator(gopdf.PageSizeA4)
 
-	if err := gen.RegisterFont("", ipaexgttf); err != nil {
-		panic(err)
+	if err := gen.RegisterFont("", ipaexgBytes); err != nil {
+		t.Fatal(err)
+	}
+	if err := gen.RegisterFont("ipaexm", ipaexmBytes); err != nil {
+		t.Fatal(err)
 	}
 
-	fp, err := os.Open("./testdata/pdf-templates/meter-clinic-building.pdf")
+	tpl, err := gen.RegisterTemplate(templateBytes, 1)
 	if err != nil {
-		panic(err)
-	}
-
-	defer fp.Close()
-
-	tpl, err := gen.RegisterTemplate(fp, 1)
-	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	vars := PDFVars{
@@ -51,16 +54,19 @@ func TestNewGenerator(t *testing.T) {
 	}
 
 	if err := gen.AddPageDebug(vars, tpl); err != nil {
-		panic(err)
+		t.Fatal(err)
+	}
+	if err := gen.AddPageDebug(vars, nil); err != nil {
+		t.Fatal(err)
 	}
 
 	pdfData, err := gen.Generate()
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	if err := os.WriteFile("testdata/out.pdf", pdfData, 0666); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 }
 
@@ -68,7 +74,7 @@ func TestNewGenerator(t *testing.T) {
 type PDFVars struct {
 	Image      image.Image         `pdftpl:"x=50,y=50,w=120,h=120,f=contain"`
 	Date       string              `pdftpl:"x=425,y=50,w=120,s=12,a=r"`
-	Title      string              `pdftpl:"x=50,y=100,w=495,s=26,a=c"`
+	Title      string              `pdftpl:"x=50,y=100,w=495,s=26,a=c,f=ipaexm"`
 	Recipient  string              `pdftpl:"x=50,y=190,w=300,s=18,a=l"`
 	Amount     string              `pdftpl:"x=132,y=252,w=95,s=12,a=r"`
 	Room       string              `pdftpl:"x=132,y=300,w=145,s=10,a=c"`
