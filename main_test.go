@@ -53,10 +53,10 @@ func TestNewGenerator(t *testing.T) {
 		}
 	}
 
-	if err := gen.AddPageDebug(vars, tpl); err != nil {
+	if err := gen.AddPage(vars, tpl, pdftpl.Debug(color.RGBA{R: 0xFF, A: 0xFF})); err != nil {
 		t.Fatal(err)
 	}
-	if err := gen.AddPageDebug(vars, nil); err != nil {
+	if err := gen.AddPage(vars, nil, pdftpl.Debug(color.RGBA{B: 0xFF, A: 0xFF})); err != nil {
 		t.Fatal(err)
 	}
 

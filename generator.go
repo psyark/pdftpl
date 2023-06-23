@@ -3,6 +3,7 @@ package pdftpl
 import (
 	"bytes"
 	"fmt"
+	"image/color"
 	"io"
 
 	"github.com/signintech/gopdf"
@@ -39,16 +40,14 @@ func (gen *Generator) RegisterTemplate(data []byte, pageNumber int) (tmpl *Templ
 }
 
 // AddPage はページを追加します
-func (gen *Generator) AddPage(vars interface{}, tpl *Template) error {
-	return gen.addPage(vars, tpl, false)
-}
+func (gen *Generator) AddPage(vars any, tpl *Template, options ...AddPageOption) error {
+	opts := &addPageOptions{
+		DebugBorderColor: color.Transparent,
+	}
+	for _, o := range options {
+		o(opts)
+	}
 
-// AddPageDebug はデバッグ情報付きでページを追加します
-func (gen *Generator) AddPageDebug(vars interface{}, tpl *Template) error {
-	return gen.addPage(vars, tpl, true)
-}
-
-func (gen *Generator) addPage(vars interface{}, tpl *Template, debug bool) error {
 	// ページ追加
 	gen.gopdf.AddPage()
 	if tpl != nil {
@@ -61,7 +60,7 @@ func (gen *Generator) addPage(vars interface{}, tpl *Template, debug bool) error
 	}
 
 	for _, element := range elements {
-		if err := element.draw(gen.gopdf, debug); err != nil {
+		if err := element.draw(gen.gopdf, opts); err != nil {
 			return err
 		}
 	}

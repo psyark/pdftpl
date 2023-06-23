@@ -2,6 +2,7 @@ package pdftpl
 
 import (
 	"image"
+	"image/color"
 
 	"github.com/signintech/gopdf"
 )
@@ -12,7 +13,7 @@ var (
 )
 
 type element interface {
-	draw(pdf *gopdf.GoPdf, debug bool) error
+	draw(pdf *gopdf.GoPdf, options *addPageOptions) error
 }
 
 type textElement struct {
@@ -20,11 +21,14 @@ type textElement struct {
 	text string
 }
 
-func (e *textElement) draw(pdf *gopdf.GoPdf, debug bool) error {
-	if debug {
-		pdf.SetStrokeColor(255, 128, 128)
+func (e *textElement) draw(pdf *gopdf.GoPdf, options *addPageOptions) error {
+	if options.DebugBorderColor != color.Transparent {
+		r, g, b, _ := options.DebugBorderColor.RGBA()
+		pdf.SetStrokeColor(uint8(r>>8), uint8(g>>8), uint8(b>>8))
 		pdf.SetLineWidth(2)
-		pdf.Rectangle(e.X, e.Y, e.X+e.W, e.Y+10, "D", 3, 10)
+		if err := pdf.Rectangle(e.X, e.Y, e.X+e.W, e.Y+10, "D", 3, 10); err != nil {
+			return err
+		}
 	}
 
 	pdf.SetFont(e.FontFace, "", e.FontSize)
@@ -53,7 +57,7 @@ type imageElement struct {
 	image image.Image
 }
 
-func (e *imageElement) draw(pdf *gopdf.GoPdf, debug bool) error {
+func (e *imageElement) draw(pdf *gopdf.GoPdf, options *addPageOptions) error {
 	if e.image != nil {
 		pdf.ImageFrom(e.image, e.X, e.Y, &gopdf.Rect{W: e.W, H: e.H})
 	}
