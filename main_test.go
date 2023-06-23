@@ -1,14 +1,15 @@
 package pdftpl_test
 
 import (
+	"bytes"
 	_ "embed"
 	"fmt"
 	"image"
 	"image/color"
+	"image/png"
 	"os"
 	"testing"
 
-	"github.com/aquilax/go-perlin"
 	"github.com/psyark/pdftpl"
 	"github.com/signintech/gopdf"
 )
@@ -18,6 +19,8 @@ var (
 	ipaexmBytes []byte
 	//go:embed "testdata/fonts/ipaexg.ttf"
 	ipaexgBytes []byte
+	//go:embed "testdata/test.png"
+	imageBytes []byte
 	//go:embed "testdata/pdf-templates/meter-clinic-building.pdf"
 	templateBytes []byte
 )
@@ -37,11 +40,16 @@ func TestNewGenerator(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	img, err := png.Decode(bytes.NewReader(imageBytes))
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	vars := PDFVars{
 		Title:     "電気料金請求書",
 		Date:      "2022/09/07",
 		Recipient: "あいうえおかきくけこさしすせそたちつてと\nなにぬねの",
-		Image:     createMockImage(),
+		Image:     img,
 	}
 
 	for i := range vars.Meters {
@@ -98,17 +106,4 @@ type PDFMeterVars struct {
 type PDFStatementVars struct {
 	Title  string `pdftpl:"x=59,y=393,w=320,s=10,a=l"`
 	Amount string `pdftpl:"x=397,y=393,w=138,s=10,a=r"`
-}
-
-func createMockImage() image.Image {
-	noise := perlin.NewPerlin(2, 2, 3, 0)
-	mock := image.NewGray(image.Rect(0, 0, 256, 256))
-	for y := 0; y < mock.Rect.Dy(); y++ {
-		for x := 0; x < mock.Rect.Dx(); x++ {
-			fx := float64(x) / float64(mock.Rect.Dx())
-			fy := float64(y) / float64(mock.Rect.Dy())
-			mock.SetGray(x, y, color.Gray{Y: uint8(noise.Noise2D(fx, fy)*127 + 127)})
-		}
-	}
-	return mock
 }
